@@ -24,7 +24,7 @@ type sipCseq struct {
 func parseSipCseq(v []byte, out *sipCseq) {
 
 	pos := 0
-	state := 0
+	state := FIELD_BASE
 
 	// Init the output area
 	out.Id = nil
@@ -41,13 +41,6 @@ func parseSipCseq(v []byte, out *sipCseq) {
 		// FSM
 		//fmt.Println("POS:", pos, "CHR:", string(v[pos]), "STATE:", state)
 		switch state {
-		case FIELD_NULL:
-			if strings.ToLower(string(v[pos:pos+5])) == "cseq:" {
-				state = FIELD_BASE
-				pos = pos + 5
-				continue
-			}
-
 		case FIELD_BASE:
 			if v[pos] == ' ' {
 				state = FIELD_ID
