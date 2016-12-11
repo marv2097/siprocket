@@ -1,6 +1,5 @@
 package siprocket
 
-import "strings"
 
 /*
  RFC 3261 - https://www.ietf.org/rfc/rfc3261.txt - 8.1.1.5 CSeq
@@ -24,7 +23,7 @@ type sipCseq struct {
 func parseSipCseq(v []byte, out *sipCseq) {
 
 	pos := 0
-	state := FIELD_BASE
+	state := FIELD_ID
 
 	// Init the output area
 	out.Id = nil
@@ -41,13 +40,6 @@ func parseSipCseq(v []byte, out *sipCseq) {
 		// FSM
 		//fmt.Println("POS:", pos, "CHR:", string(v[pos]), "STATE:", state)
 		switch state {
-		case FIELD_BASE:
-			if v[pos] == ' ' {
-				state = FIELD_ID
-				pos++
-				continue
-			}
-
 		case FIELD_ID:
 			if v[pos] == ' ' {
 				state = FIELD_METHOD
