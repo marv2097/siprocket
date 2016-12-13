@@ -21,6 +21,7 @@ type SipMsg struct {
 	MaxFwd   sipVal
 	CallId   sipVal
 	ContType sipVal
+	ContLen  sipVal
 
 	Sdp SdpMsg
 }
@@ -80,6 +81,8 @@ func Parse(v []byte) (output SipMsg) {
 					output.CallId.Value = lval
 				case lhdr == "c" || lhdr == "content-type":
 					output.ContType.Value = lval
+				case lhdr == "content-length":
+					output.ContLen.Value = lval
 				case lhdr == "user-agent":
 					output.Ua.Value = lval
 				case lhdr == "expires":
