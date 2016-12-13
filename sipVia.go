@@ -51,57 +51,57 @@ func parseSipVia(v []byte, out *sipVia) {
 		case FIELD_BASE:
 			if v[pos] != ' ' {
 				// Not a space
-				if string(v[pos:pos+8]) == "SIP/2.0/" {
+				if getString(v, pos, pos+8) == "SIP/2.0/" {
 					// Transport type
 					state = FIELD_HOST
 					pos = pos + 8
-					if string(v[pos:pos+3]) == "UDP" {
+					if getString(v, pos, pos+3) == "UDP" {
 						out.Trans = "udp"
 						pos = pos + 3
 						continue
 					}
-					if string(v[pos:pos+3]) == "TCP" {
+					if getString(v, pos, pos+3) == "TCP" {
 						out.Trans = "tcp"
 						pos = pos + 3
 						continue
 					}
-					if string(v[pos:pos+3]) == "TLS" {
+					if getString(v, pos, pos+3) == "TLS" {
 						out.Trans = "tls"
 						pos = pos + 3
 						continue
 					}
-					if string(v[pos:pos+4]) == "SCTP" {
+					if getString(v, pos, pos+4) == "SCTP" {
 						out.Trans = "sctp"
 						pos = pos + 4
 						continue
 					}
 				}
 				// Look for a Branch identifier
-				if string(v[pos:pos+7]) == "branch=" {
+				if getString(v, pos, pos+7) == "branch=" {
 					state = FIELD_BRANCH
 					pos = pos + 7
 					continue
 				}
 				// Look for a Rport identifier
-				if string(v[pos:pos+6]) == "rport=" {
+				if getString(v, pos, pos+6) == "rport=" {
 					state = FIELD_RPORT
 					pos = pos + 6
 					continue
 				}
 				// Look for a maddr identifier
-				if string(v[pos:pos+6]) == "maddr=" {
+				if getString(v, pos, pos+6) == "maddr=" {
 					state = FIELD_MADDR
 					pos = pos + 6
 					continue
 				}
 				// Look for a ttl identifier
-				if string(v[pos:pos+4]) == "ttl=" {
+				if getString(v, pos, pos+4) == "ttl=" {
 					state = FIELD_TTL
 					pos = pos + 4
 					continue
 				}
 				// Look for a recevived identifier
-				if string(v[pos:pos+9]) == "received=" {
+				if getString(v, pos, pos+9) == "received=" {
 					state = FIELD_REC
 					pos = pos + 9
 					continue

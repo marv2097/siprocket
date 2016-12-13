@@ -65,44 +65,44 @@ func parseSipContact(v []byte, out *sipContact) {
 			}
 			if v[pos] != ' ' {
 				// Not a space so check for uri types
-				if string(v[pos:pos+4]) == "sip:" {
+				if getString(v, pos, pos+4) == "sip:" {
 					state = FIELD_USER
 					pos = pos + 4
 					out.UriType = "sip"
 					continue
 				}
-				if string(v[pos:pos+5]) == "sips:" {
+				if getString(v, pos, pos+5) == "sips:" {
 					state = FIELD_USER
 					pos = pos + 5
 					out.UriType = "sips"
 					continue
 				}
-				if string(v[pos:pos+4]) == "tel:" {
+				if getString(v, pos, pos+4) == "tel:" {
 					state = FIELD_USER
 					pos = pos + 4
 					out.UriType = "tel"
 					continue
 				}
 				// Look for a Q identifier
-				if string(v[pos:pos+2]) == "q=" {
+				if getString(v, pos, pos+2) == "q=" {
 					state = FIELD_Q
 					pos = pos + 2
 					continue
 				}
 				// Look for a Expires identifier
-				if string(v[pos:pos+8]) == "expires=" {
+				if getString(v, pos, pos+8) == "expires=" {
 					state = FIELD_EXPIRES
 					pos = pos + 8
 					continue
 				}
 				// Look for a transport identifier
-				if string(v[pos:pos+10]) == "transport=" {
+				if getString(v, pos, pos+10) == "transport=" {
 					state = FIELD_TRAN
 					pos = pos + 10
 					continue
 				}
 				// Look for other identifiers and ignore
-				if string(v[pos]) == "=" {
+				if v[pos] == '=' {
 					state = FIELD_IGNORE
 					pos = pos + 1
 					continue

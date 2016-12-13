@@ -47,38 +47,38 @@ func parseSipTo(v []byte, out *sipTo) {
 			}
 			if v[pos] != ' ' {
 				// Not a space so check for uri types
-				if string(v[pos:pos+4]) == "sip:" {
+				if getString(v, pos, pos+4) == "sip:" {
 					state = FIELD_USER
 					pos = pos + 4
 					out.UriType = "sip"
 					continue
 				}
-				if string(v[pos:pos+5]) == "sips:" {
+				if getString(v, pos, pos+5) == "sips:" {
 					state = FIELD_USER
 					pos = pos + 5
 					out.UriType = "sips"
 					continue
 				}
-				if string(v[pos:pos+4]) == "tel:" {
+				if getString(v, pos, pos+4) == "tel:" {
 					state = FIELD_USER
 					pos = pos + 4
 					out.UriType = "tel"
 					continue
 				}
 				// Look for a Tag identifier
-				if string(v[pos:pos+4]) == "tag=" {
+				if getString(v, pos, pos+4) == "tag=" {
 					state = FIELD_TAG
 					pos = pos + 4
 					continue
 				}
 				// Look for a User Type identifier
-				if string(v[pos:pos+5]) == "user=" {
+				if getString(v, pos, pos+5)) == "user=" {
 					state = FIELD_USERTYPE
 					pos = pos + 5
 					continue
 				}
 				// Look for other identifiers and ignore
-				if string(v[pos]) == "=" {
+				if v[pos] == '='' {
 					state = FIELD_IGNORE
 					pos = pos + 1
 					continue
