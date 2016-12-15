@@ -77,7 +77,7 @@ func parseSipFrom(v []byte, out *sipFrom) {
 					continue
 				}
 				// Look for other identifiers and ignore
-				if v[pos] == '='' {
+				if v[pos] == '=' {
 					state = FIELD_IGNORE
 					pos = pos + 1
 					continue

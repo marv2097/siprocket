@@ -72,13 +72,13 @@ func parseSipTo(v []byte, out *sipTo) {
 					continue
 				}
 				// Look for a User Type identifier
-				if getString(v, pos, pos+5)) == "user=" {
+				if getString(v, pos, pos+5) == "user=" {
 					state = FIELD_USERTYPE
 					pos = pos + 5
 					continue
 				}
 				// Look for other identifiers and ignore
-				if v[pos] == '='' {
+				if v[pos] == '=' {
 					state = FIELD_IGNORE
 					pos = pos + 1
 					continue
