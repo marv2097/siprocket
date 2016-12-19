@@ -87,6 +87,13 @@ func parseSipReq(v []byte, out *sipReq) {
 					pos = pos + 5
 					continue
 				}
+				if v[pos] == '@' {
+					state = FIELD_HOST
+					out.User = out.Host // Move host to user
+					out.Host = nil      // Clear the host
+					pos++
+					continue
+				}
 			}
 		case FIELD_USER:
 			if v[pos] == ':' {
