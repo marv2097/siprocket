@@ -7,7 +7,7 @@ import (
 )
 
 var sip_type = 0
-var keep_src = false
+var keep_src = true
 
 type SipMsg struct {
 	Req      sipReq
@@ -291,6 +291,7 @@ const FIELD_EXPIRES = 17
 const FIELD_Q = 18
 const FIELD_USERTYPE = 19
 const FIELD_STATUS = 20
+const FIELD_STATUSDESC = 21
 
 const FIELD_ADDRTYPE = 40
 const FIELD_CONNADDR = 41

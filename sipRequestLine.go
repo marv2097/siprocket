@@ -11,7 +11,8 @@ SIP/2.0 200 OK
 type sipReq struct {
 	Method     []byte // Sip Method eg INVITE etc
 	UriType    string // Type of URI sip, sips, tel etc
-	StatusCode []byte // Status Code
+	StatusCode []byte // Status Code eg 100
+	StatusDesc []byte // Status Code Description eg trying
 	User       []byte // User part
 	Host       []byte // Host part
 	Port       []byte // Port number
@@ -145,12 +146,26 @@ func parseSipReq(v []byte, out *sipReq) {
 			out.UserType = append(out.UserType, v[pos])
 
 		case FIELD_STATUS:
-			if v[pos] == ';' || v[pos] == '>' || v[pos] == ' ' {
+			if v[pos] == ';' || v[pos] == '>' {
 				state = FIELD_BASE
 				pos++
 				continue
 			}
+			if v[pos] == ' '{
+				state = FIELD_STATUSDESC
+				pos++
+				continue
+			}
 			out.StatusCode = append(out.StatusCode, v[pos])
+
+		case FIELD_STATUSDESC:
+			if v[pos] == ';' || v[pos] == '>' {
+				state = FIELD_BASE
+				pos++
+				continue
+			}
+			out.StatusDesc = append(out.StatusDesc, v[pos])
+
 		}
 		pos++
 	}
