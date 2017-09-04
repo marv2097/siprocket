@@ -54,6 +54,7 @@ func parseSipReq(v []byte, out *sipReq) {
 			if v[pos] == ' ' || pos > 9 {
 				if string(out.Method) == "SIP/2.0" {
 					state = FIELD_STATUS
+					out.Method = []byte{}
 				} else {
 					state = FIELD_BASE
 				}
@@ -151,7 +152,7 @@ func parseSipReq(v []byte, out *sipReq) {
 				pos++
 				continue
 			}
-			if v[pos] == ' '{
+			if v[pos] == ' ' {
 				state = FIELD_STATUSDESC
 				pos++
 				continue
