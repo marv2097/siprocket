@@ -42,7 +42,7 @@ Will Print `From: HarryJones To: JohnSmith`
 
 ### Output Data Structure
 
-Many of the SIP headers are in simple key value pairs. For example the Call-ID field, these kind of fields all share the same format used to store them. It has a slice of bytes for the value, and an optional source variable.
+Many of the SIP headers are in simple key value pairs. For example the Call-ID field, these kinds of fields all share the same format used to store them. It has a slice of bytes for the value, and an optional source variable.
 
 ```go
 type sipVal struct {
@@ -51,7 +51,7 @@ type sipVal struct {
 }
 ```
 
-To access them we just reference the field name (key) followed by the word 'Value'. So if we wanted to get the Call-ID from the example above we would just reference `sip.CallId.Value`. Other fields that support this format are:
+To access them we just reference the field name followed by the word `Value`. So if we wanted to get the Call-ID from the example above we would just reference `sip.CallId.Value`. Other fields that support this format are:
 
 Header Field | Reference
 --- | ---
@@ -62,7 +62,7 @@ Call-Id | `CallId`
 Content-Type | `ContType`
 Content-Length | `ContLen`
 
-Other fields have more specific structs to hold the data they contain, for example the From and To header field has each section broken out and are identical:
+More complicated fields have specific structs to hold the data they contain, for example the From and To header field has each section broken out and are identical:
 
 ```go
 type sipTo struct {
@@ -79,13 +79,13 @@ type sipTo struct {
 
 #### Multiple values
 
-When a field is present in the SIP header multiple times we can use a slice of its struct to hold the multiple values. These can then be itterated over with the `range` keyword or their size checked with the `len` keyword. An example of this is the Via header field. There can be multiple Via's in a sip message and they are kept in order as the message is parsed from the first line to the last.
+When a field is present in the SIP header multiple times we can use a slice of its struct to hold the multiple values. These can then be itterated over with the `range` keyword or their size checked with the `len` keyword. An example of this is the Via header field. There can be multiple Via's in a SIP message and they are kept in order as the message is parsed from the first line to the last.
 
-For a Via, The key part of the `SipMsg` struct is show along with the `sipVia` struct:
+For a Via, The key part of the `SipMsg` struct is shown along with the `sipVia` struct:
 
 ```go
 type SipMsg struct
-    Via []sipVia
+    Via []sipVia    // Slice of SIP Vias
     
 
 type sipVia struct {
@@ -105,7 +105,7 @@ The SDP Attributes field also supports multiple entries.
 
 #### SDP
 
-If SDP is found within a SIP message then it will be parsed too. Media Descriptions, Attributes and Connection Data are all available from the SDP payload. So if you wanted to get the media port number from an INVITE with SDP and convert it to an integer you could use something like:
+If SDP is found within a SIP message then it will be parsed too. Media Descriptions, Attributes and Connection Data are all available from the SDP payload. If you wanted to get the media port number from an INVITE with SDP and convert it to an integer, you could use something like:
 
 ```go
 	port, _ := strconv.Atoi(string(sip.Sdp.MediaDesc.Port))
