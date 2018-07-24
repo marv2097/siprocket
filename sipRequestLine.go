@@ -123,7 +123,7 @@ func parseSipReq(v []byte, out *sipReq) {
 				pos++
 				continue
 			}
-			if v[pos] == ';' || v[pos] == '>' {
+			if v[pos] == ';' || v[pos] == '>' || v[pos] == ' ' {
 				state = FIELD_BASE
 				pos++
 				continue
