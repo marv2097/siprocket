@@ -140,7 +140,7 @@ func getString(sl []byte, from, to int) string {
 	if from > cap(sl) {
 		return ""
 	}
-	if from+to > cap(sl) {
+	if to > cap(sl) {
 		return string(sl[from:])
 	}
 	return string(sl[from:to])
@@ -153,7 +153,7 @@ func getBytes(sl []byte, from, to int) []byte {
 	if from > cap(sl) {
 		return nil
 	}
-	if from+to > cap(sl) {
+	if to > cap(sl) {
 		return sl[from:]
 	}
 	return sl[from:to]
