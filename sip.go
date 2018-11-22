@@ -137,10 +137,10 @@ func indexSep(s []byte) (int, byte) {
 // Checks the bounds to avoid any range errors
 func getString(sl []byte, from, to int) string {
 	// Limit if over cap
-	if from > cap(sl) {
+	if from > len(sl) {
 		return ""
 	}
-	if to > cap(sl) {
+	if to > len(sl) {
 		return string(sl[from:])
 	}
 	return string(sl[from:to])
@@ -150,10 +150,10 @@ func getString(sl []byte, from, to int) string {
 // Checks the bounds to avoid any range errors
 func getBytes(sl []byte, from, to int) []byte {
 	// Limit if over cap
-	if from > cap(sl) {
+	if from > len(sl) {
 		return nil
 	}
-	if to > cap(sl) {
+	if to > len(sl) {
 		return sl[from:]
 	}
 	return sl[from:to]

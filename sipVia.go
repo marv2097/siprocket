@@ -119,6 +119,10 @@ func parseSipVia(v []byte, out *sipVia) {
 				pos++
 				continue
 			}
+			if v[pos] == ' ' {
+				pos++
+				continue
+			}
 			out.Host = append(out.Host, v[pos])
 
 		case FIELD_PORT:
