@@ -22,7 +22,7 @@ type SipMsg struct {
 	CallId   sipVal
 	ContType sipVal
 	ContLen  sipVal
-
+	Auth Auth
 	Sdp SdpMsg
 }
 
@@ -91,6 +91,8 @@ func Parse(v []byte) (output SipMsg) {
 					output.MaxFwd.Value = lval
 				case lhdr == "cseq":
 					parseSipCseq(lval, &output.Cseq)
+				case lhdr == "authorization":
+					AuthParser(string(lval), &output.Auth)
 				} // End of Switch
 			}
 			if spos == 1 && stype == '=' {
