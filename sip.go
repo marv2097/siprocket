@@ -56,9 +56,8 @@ func Parse(v []byte) (output SipMsg) {
 			parseSipReq(line, &output.Req)
 		} else {
 			// For subsequent lines split in sep (: for sip, = for sdp)
-			//sep_sip := bytes.IndexByte(line, ':')
 			spos, stype := indexSep(line)
-			if spos > 1 && stype == ':' {
+			if spos > 0 && stype == ':' {
 				// SIP: Break up into header and value
 				lhdr := strings.ToLower(string(line[0:spos]))
 				lval := bytes.TrimSpace(line[spos+1:])
