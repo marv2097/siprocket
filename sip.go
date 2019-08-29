@@ -135,8 +135,15 @@ func indexSep(s []byte) (int, byte) {
 // Get a string from a slice of bytes
 // Checks the bounds to avoid any range errors
 func getString(sl []byte, from, to int) string {
-	// Limit if over cap
-	if from > len(sl) {
+	// Remove negative values
+	if from < 0 {
+	    from = 0
+	}
+	if to < 0 {
+	    to = 0
+	}
+	// Limit if over len
+	if from > len(sl) || from > to {
 		return ""
 	}
 	if to > len(sl) {
@@ -148,8 +155,15 @@ func getString(sl []byte, from, to int) string {
 // Get a slice from a slice of bytes
 // Checks the bounds to avoid any range errors
 func getBytes(sl []byte, from, to int) []byte {
-	// Limit if over cap
-	if from > len(sl) {
+	// Remove negative values
+	if from < 0 {
+	    from = 0
+	}
+	if to < 0 {
+	    to = 0
+	}
+	// Limit if over len
+	if from > len(sl) || from > to {
 		return nil
 	}
 	if to > len(sl) {
