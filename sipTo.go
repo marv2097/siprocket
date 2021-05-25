@@ -1,162 +1,110 @@
 package siprocket
 
+import (
+	"bytes"
+	"errors"
+)
+
 // Parses a single line that is in the format of a to line, v
 // Also requires a pointer to a struct of type sipTo to write output to
 // RFC 3261 - https://www.ietf.org/rfc/rfc3261.txt - 8.1.1.2 To
 
 type sipTo struct {
-	UriType  string // Type of URI sip, sips, tel etc
-	Name     []byte // Named portion of URI
-	User     []byte // User part
-	Host     []byte // Host part
-	Port     []byte // Port number
-	Tag      []byte // Tag
-	UserType []byte // User Type
-	Src      []byte // Full source if needed
+	UriType []byte   // Type of URI sip, sips, tel etc
+	Name    []byte   // Named portion of URI
+	User    []byte   // User part
+	Host    []byte   // Host part
+	Port    []byte   // Port number
+	Parms   [][]byte // Arrray of URI prams
+	Tag     []byte   // Tag
+	Src     []byte   // Full source if needed
 }
 
-func parseSipTo(v []byte, out *sipTo) {
+/* Examples
+sip:user:password@host:port;uri-parameters?headers
 
-	pos := 0
-	state := FIELD_BASE
+"name"sip:who@where:port;tag=
+name <sip:who@where:port>;tag=
+sip:who@where:port;tag=
+<sip:who@where:port;uri-param=>;tag=
+*/
+
+func parseSipTo(v []byte, out *sipTo) error {
+
+	var idx int
 
 	// Init the output area
-	out.UriType = ""
 	out.Name = nil
 	out.User = nil
 	out.Host = nil
+	out.Parms = nil
 	out.Port = nil
 	out.Tag = nil
-	out.UserType = nil
-	out.Src = nil
 
 	// Keep the source line if needed
-	if keep_src {
-		out.Src = v
+	out.Src = v
+
+	// Probably easier to strip any tag from the end
+	// ; and = are reserved charactors so this should not be found elsewhere
+	if idx = bytes.LastIndex(v, []byte(";tag=")); idx > -1 {
+		out.Tag = v[idx+5:]
+		v = v[:idx]
 	}
 
-	// Loop through the bytes making up the line
-	for pos < len(v) {
-		// FSM
-		switch state {
-		case FIELD_BASE:
-			if v[pos] == '"' && out.UriType == "" {
-				state = FIELD_NAMEQ
-				pos++
-				continue
-			}
-			if v[pos] != ' ' {
-				// Not a space so check for uri types
-				if getString(v, pos, pos+4) == "sip:" {
-					state = FIELD_USER
-					pos = pos + 4
-					out.UriType = "sip"
-					continue
-				}
-				if getString(v, pos, pos+5) == "sips:" {
-					state = FIELD_USER
-					pos = pos + 5
-					out.UriType = "sips"
-					continue
-				}
-				if getString(v, pos, pos+4) == "tel:" {
-					state = FIELD_USER
-					pos = pos + 4
-					out.UriType = "tel"
-					continue
-				}
-				// Look for a Tag identifier
-				if getString(v, pos, pos+4) == "tag=" {
-					state = FIELD_TAG
-					pos = pos + 4
-					continue
-				}
-				// Look for a User Type identifier
-				if getString(v, pos, pos+5) == "user=" {
-					state = FIELD_USERTYPE
-					pos = pos + 5
-					continue
-				}
-				// Look for other identifiers and ignore
-				if v[pos] == '=' {
-					state = FIELD_IGNORE
-					pos = pos + 1
-					continue
-				}
-				// Check for other chrs
-				if v[pos] != '<' && v[pos] != '>' && v[pos] != ';' && out.UriType == "" {
-					state = FIELD_NAME
-					continue
-				}
-			}
-
-		case FIELD_NAMEQ:
-			if v[pos] == '"' {
-				state = FIELD_BASE
-				pos++
-				continue
-			}
-			out.Name = append(out.Name, v[pos])
-
-		case FIELD_NAME:
-			if v[pos] == '<' || v[pos] == ' ' {
-				state = FIELD_BASE
-				pos++
-				continue
-			}
-			out.Name = append(out.Name, v[pos])
-
-		case FIELD_USER:
-			if v[pos] == '@' {
-				state = FIELD_HOST
-				pos++
-				continue
-			}
-			out.User = append(out.User, v[pos])
-
-		case FIELD_HOST:
-			if v[pos] == ':' {
-				state = FIELD_PORT
-				pos++
-				continue
-			}
-			if v[pos] == ';' || v[pos] == '>' {
-				state = FIELD_BASE
-				pos++
-				continue
-			}
-			out.Host = append(out.Host, v[pos])
-
-		case FIELD_PORT:
-			if v[pos] == ';' || v[pos] == '>' || v[pos] == ' ' {
-				state = FIELD_BASE
-				pos++
-				continue
-			}
-			out.Port = append(out.Port, v[pos])
-
-		case FIELD_USERTYPE:
-			if v[pos] == ';' || v[pos] == '>' || v[pos] == ' ' {
-				state = FIELD_BASE
-				pos++
-				continue
-			}
-			out.UserType = append(out.UserType, v[pos])
-
-		case FIELD_TAG:
-			if v[pos] == ';' || v[pos] == '>' || v[pos] == ' ' {
-				state = FIELD_BASE
-				pos++
-				continue
-			}
-			out.Tag = append(out.Tag, v[pos])
-		case FIELD_IGNORE:
-			if v[pos] == ';' || v[pos] == '>' {
-				state = FIELD_BASE
-				pos++
-				continue
-			}
+	// Next if our uri string uses <> encapsulation our end charactor should be >
+	if idx = bytes.LastIndexByte(v, byte('>')); idx == len(v)-1 {
+		if idx = bytes.IndexByte(v, byte('<')); idx > -1 {
+			out.Name = v[:idx]
+			v = v[idx+1 : len(v)-1]
+		} else {
+			return errors.New("found ending encapsualtion > but not staring <")
 		}
-		pos++
 	}
+
+	// Split off the params
+	for {
+		if idx = bytes.LastIndexByte(v, byte(';')); idx == -1 {
+			break
+		}
+		out.Parms = append(out.Parms, v[idx+1:])
+		v = v[:idx]
+	}
+
+	// Next we'll find that method SIP(S)
+	if idx = bytes.Index(v, []byte("sip:")); idx > -1 {
+		if idx > 0 {
+			out.Name = v[:idx]
+		}
+		out.UriType = v[idx : idx+3]
+		v = v[idx+4:]
+	} else if idx = bytes.Index(v, []byte("sips:")); idx > -1 {
+		if idx > 0 {
+			out.Name = v[:idx]
+		}
+		out.UriType = v[idx : idx+4]
+		v = v[idx+5:]
+	} else {
+		return errors.New("no UriType found")
+	}
+
+	// clean up out.Name
+	out.Name = bytes.Trim(out.Name, ` `)
+	out.Name = bytes.Trim(out.Name, `"`)
+
+	// Next find if userinfo is present denoted by @ (reserved charactor)
+	if idx = bytes.IndexByte(v, byte('@')); idx > -1 {
+		out.User = v[:idx]
+		v = v[idx+1:]
+	}
+
+	// remote any port
+	if idx = bytes.IndexByte(v, byte(':')); idx > -1 {
+		out.Port = v[idx+1:]
+		v = v[:idx]
+	}
+
+	// all that is left is the host
+	out.Host = v
+
+	return nil
 }
