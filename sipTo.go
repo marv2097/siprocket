@@ -15,7 +15,7 @@ type sipTo struct {
 	User    []byte   // User part
 	Host    []byte   // Host part
 	Port    []byte   // Port number
-	Parms   [][]byte // Arrray of URI prams
+	Params  [][]byte // Arrray of URI prams
 	Tag     []byte   // Tag
 	Src     []byte   // Full source if needed
 }
@@ -37,7 +37,7 @@ func parseSipTo(v []byte, out *sipTo) error {
 	out.Name = nil
 	out.User = nil
 	out.Host = nil
-	out.Parms = nil
+	out.Params = nil
 	out.Port = nil
 	out.Tag = nil
 
@@ -66,7 +66,7 @@ func parseSipTo(v []byte, out *sipTo) error {
 		if idx = bytes.LastIndexByte(v, byte(';')); idx == -1 {
 			break
 		}
-		out.Parms = append(out.Parms, v[idx+1:])
+		out.Params = append(out.Params, v[idx+1:])
 		v = v[:idx]
 	}
 

@@ -137,10 +137,10 @@ func indexSep(s []byte) (int, byte) {
 func getString(sl []byte, from, to int) string {
 	// Remove negative values
 	if from < 0 {
-	    from = 0
+		from = 0
 	}
 	if to < 0 {
-	    to = 0
+		to = 0
 	}
 	// Limit if over len
 	if from > len(sl) || from > to {
@@ -157,10 +157,10 @@ func getString(sl []byte, from, to int) string {
 func getBytes(sl []byte, from, to int) []byte {
 	// Remove negative values
 	if from < 0 {
-	    from = 0
+		from = 0
 	}
 	if to < 0 {
-	    to = 0
+		to = 0
 	}
 	// Limit if over len
 	if from > len(sl) || from > to {
@@ -194,6 +194,9 @@ func PrintSipStruct(data *SipMsg) {
 	fmt.Println("    [Host] =>", string(data.From.Host))
 	fmt.Println("    [Port] =>", string(data.From.Port))
 	fmt.Println("    [Tag] =>", string(data.From.Tag))
+	for _, v := range data.From.Params {
+		fmt.Println("    [Params] =>", string(v))
+	}
 	fmt.Println("    [Src] =>", string(data.From.Src))
 	// TO
 	fmt.Println("  [TO]")
@@ -203,7 +206,9 @@ func PrintSipStruct(data *SipMsg) {
 	fmt.Println("    [Host] =>", string(data.To.Host))
 	fmt.Println("    [Port] =>", string(data.To.Port))
 	fmt.Println("    [Tag] =>", string(data.To.Tag))
-	fmt.Println("    [UserType] =>", string(data.To.UserType))
+	for _, v := range data.To.Params {
+		fmt.Println("    [Params] =>", string(v))
+	}
 	fmt.Println("    [Src] =>", string(data.To.Src))
 	// TO
 	fmt.Println("  [Contact]")
