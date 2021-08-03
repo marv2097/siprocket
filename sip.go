@@ -95,7 +95,6 @@ func Parse(v []byte) (output SipMsg) {
 				case lhdr == "cseq":
 					parseSipCseq(lval, &output.Cseq)
 				case lhdr == "x-gamma-public-ip":
-					fmt.Println("testase")
 					output.XGammaIP.Value = lval
 				} // End of Switch
 			}
