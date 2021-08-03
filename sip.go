@@ -22,6 +22,7 @@ type SipMsg struct {
 	CallId   sipVal
 	ContType sipVal
 	ContLen  sipVal
+	XGammaIP sipVal
 
 	Sdp SdpMsg
 }
@@ -47,6 +48,9 @@ func Parse(v []byte) (output SipMsg) {
 	output.Sdp.Attrib = make([]sdpAttrib, 0, 8)
 
 	lines := bytes.Split(v, []byte("\r\n"))
+	if len(lines) < 2 {
+		lines = bytes.Split(v, []byte("\n"))
+	}
 
 	for i, line := range lines {
 		//fmt.Println(i, string(line))
@@ -90,6 +94,9 @@ func Parse(v []byte) (output SipMsg) {
 					output.MaxFwd.Value = lval
 				case lhdr == "cseq":
 					parseSipCseq(lval, &output.Cseq)
+				case lhdr == "x-gamma-public-ip":
+					fmt.Println("testase")
+					output.XGammaIP.Value = lval
 				} // End of Switch
 			}
 			if spos == 1 && stype == '=' {
@@ -246,6 +253,10 @@ func PrintSipStruct(data *SipMsg) {
 	fmt.Println("  [Content-Type]")
 	fmt.Println("    [Value] =>", string(data.ContType.Value))
 	fmt.Println("    [Src] =>", string(data.ContType.Src))
+	// XGammaIP
+	fmt.Println("  [XGammaIP]")
+	fmt.Println("    [Value] =>", string(data.XGammaIP.Value))
+	fmt.Println("    [Src] =>", string(data.XGammaIP.Src))
 
 	// Via - Multiple
 	fmt.Println("  [Via]")
