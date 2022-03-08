@@ -69,7 +69,7 @@ func Test_sipParse_From_3(t *testing.T) {
 
 	var out, exp sipFrom
 
-	msg := `"Board Room"sip:phone_abc_123@test.com;tag=ABCD-123-EFG`
+	msg := `"Board Room" <sip:phone_abc_123@test.com>;tag=ABCD-123-EFG`
 	exp = sipFrom{
 		UriType: []byte("sip"),
 		Name:    []byte("Board Room"),

@@ -21,12 +21,11 @@ type sipTo struct {
 }
 
 /* Examples
-sip:user:password@host:port;uri-parameters?headers
-
-"name"sip:who@where:port;tag=
-name <sip:who@where:port>;tag=
-sip:who@where:port;tag=
-<sip:who@where:port;uri-param=>;tag=
+sip:user:password@host:port;header-parameters
+sip:user:password@host:port;uri-parameters?headers-parameters
+<sip:user:password@host:port;uri-parameters>headers-parameters
+display name <user:password@host:port;uri-parameters>headers-parameters
+"display name" <user:password@host:port;uri-parameters>headers-parameters
 */
 
 func parseSipTo(v []byte, out *sipTo) error {
@@ -44,33 +43,67 @@ func parseSipTo(v []byte, out *sipTo) error {
 	// Keep the source line if needed
 	out.Src = v
 
-	// Probably easier to strip any tag from the end
-	// ; and = are reserved charactors so this should not be found elsewhere
-	if idx = bytes.LastIndex(v, []byte(";tag=")); idx > -1 {
-		out.Tag = v[idx+5:]
-		v = v[:idx]
-	}
+	// Check if our uri string uses <> encapsulation
+	// Although <> is not a reserved charactor so its possible we can go wrong
+	// If there is a name string then encapsultion must be used.
+	if idx = bytes.LastIndexByte(v, byte('>')); idx > -1 {
 
-	// Next if our uri string uses <> encapsulation our end charactor should be >
-	if idx = bytes.LastIndexByte(v, byte('>')); idx == len(v)-1 {
-		if idx = bytes.IndexByte(v, byte('<')); idx > -1 {
-			out.Name = v[:idx]
-			v = v[idx+1 : len(v)-1]
-		} else {
+		// parse header parameters of the encapulated form
+		parseSipToHeaderParams(v[idx:], out)
+		v = v[:idx]
+
+		if idx = bytes.LastIndexByte(v, byte('<')); idx == -1 {
 			return errors.New("found ending encapsualtion > but not staring <")
 		}
-	}
 
-	// Split off the params
-	for {
-		if idx = bytes.LastIndexByte(v, byte(';')); idx == -1 {
-			break
+		// Extract the name field
+		out.Name = v[:idx]
+
+		// clean up out.Name
+		out.Name = bytes.Trim(out.Name, ` `)
+		out.Name = bytes.Trim(out.Name, `"`)
+
+		v = v[idx+1:]
+
+		// Extract the URL parameters
+		// These can only be located inside the encapsulated form
+		for {
+			if idx = bytes.LastIndexByte(v, byte(';')); idx == -1 {
+				break
+			}
+			out.Params = append(out.Params, v[idx+1:])
+			v = v[:idx]
 		}
-		out.Params = append(out.Params, v[idx+1:])
-		v = v[:idx]
+	} else {
+		// Parse header parameters of the non encapsulated form
+
+		// If its in the query form
+		if idx = bytes.LastIndexByte(v, byte('?')); idx > -1 {
+
+			// parse header parameters
+			parseSipToHeaderParams(v[idx:], out)
+			v = v[:idx]
+
+			// Extract the URL parameters
+			for {
+				if idx = bytes.LastIndexByte(v, byte(';')); idx == -1 {
+					break
+				}
+				out.Params = append(out.Params, v[idx+1:])
+				v = v[:idx]
+			}
+		} else {
+			// Parse header parameters
+			if idx = bytes.LastIndexByte(v, byte(';')); idx > -1 {
+				parseSipToHeaderParams(v[idx:], out)
+				v = v[:idx]
+			}
+		}
 	}
 
 	// Next we'll find that method SIP(S)
+	// Whilse the protocol allows the use 352 URI schema (we are only supporting sip)
+	// https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml
 	if idx = bytes.Index(v, []byte("sip:")); idx > -1 {
 		if idx > 0 {
 			out.Name = v[:idx]
@@ -84,12 +117,8 @@ func parseSipTo(v []byte, out *sipTo) error {
 		out.UriType = v[idx : idx+4]
 		v = v[idx+5:]
 	} else {
-		return errors.New("no UriType found")
+		return errors.New("unsupport URI-Schema found")
 	}
-
-	// clean up out.Name
-	out.Name = bytes.Trim(out.Name, ` `)
-	out.Name = bytes.Trim(out.Name, `"`)
 
 	// Next find if userinfo is present denoted by @ (reserved charactor)
 	if idx = bytes.IndexByte(v, byte('@')); idx > -1 {
@@ -107,4 +136,22 @@ func parseSipTo(v []byte, out *sipTo) error {
 	out.Host = v
 
 	return nil
+}
+
+func parseSipToHeaderParams(v []byte, out *sipTo) {
+	var idx int
+
+	for {
+		if idx = bytes.LastIndexByte(v[idx:], byte(';')); idx == -1 {
+			break
+		}
+
+		if len(v[idx:]) > 4 {
+			if string(v[idx:idx+5]) == ";tag=" {
+				out.Tag = v[idx+5:]
+				return
+			}
+		}
+		v = v[:idx]
+	}
 }
