@@ -366,12 +366,12 @@ func Test_sipParse_From_9(t *testing.T) {
 	exp = sipFrom{
 		UriType: []byte("sip"),
 		Name:    []byte(nil),
-		User:    []byte(nil),
-		Host:    []byte("9876543521"),
+		User:    []byte("9876543521"),
+		Host:    []byte("10.0.0.1"),
 		Port:    []byte(nil),
 		Params: [][]byte{
+			[]byte("phone-context=+44"),
 			[]byte("user=phone"),
-			[]byte("phone-context=+44@10.0.0.1"),
 		},
 		Tag: []byte("sip+6+a100+g333"),
 		Src: []byte(msg),

@@ -65,6 +65,36 @@ func parseSipTo(v []byte, out *sipTo) error {
 
 		v = v[idx+1:]
 
+		// Next we'll find that method SIP(S)
+		// Whilse the protocol allows the use 352 URI schema (we are only supporting sip)
+		// https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml
+		if idx = bytes.Index(v, []byte("sip:")); idx > -1 {
+			out.UriType = v[idx : idx+3]
+			v = v[idx+4:]
+		} else if idx = bytes.Index(v, []byte("sips:")); idx > -1 {
+			out.UriType = v[idx : idx+4]
+			v = v[idx+5:]
+		} else {
+			return errors.New("unsupport URI-Schema found")
+		}
+
+		// Next find if userinfo is present denoted by @ (reserved charactor)
+		if idx = bytes.IndexByte(v, byte('@')); idx > -1 {
+			out.User = v[:idx]
+			v = v[idx+1:]
+		}
+
+		// Trim of the password from the user section
+		if idx = bytes.IndexByte(out.User, byte(':')); idx > -1 {
+			out.User = out.User[:idx]
+		}
+
+		// Apply fix for a non complient ua
+		if idx = bytes.IndexByte(out.User, byte(';')); idx > -1 {
+			out.Params = append(out.Params, out.User[idx+1:])
+			out.User = out.User[:idx]
+		}
+
 		// Extract the URL parameters
 		// These can only be located inside the encapsulated form
 		for {
@@ -74,17 +104,56 @@ func parseSipTo(v []byte, out *sipTo) error {
 			out.Params = append(out.Params, v[idx+1:])
 			v = v[:idx]
 		}
+
+		// remote any port
+		if idx = bytes.IndexByte(v, byte(':')); idx > -1 {
+			out.Port = v[idx+1:]
+			v = v[:idx]
+		}
+
+		// all that is left is the host
+		out.Host = v
+
 	} else {
 		// Parse header parameters of the non encapsulated form
 
-		// If its in the query form
-		if idx = bytes.LastIndexByte(v, byte('?')); idx > -1 {
+		// Next we'll find that method SIP(S)
+		// Whilse the protocol allows the use 352 URI schema (we are only supporting sip)
+		// https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml
+		if idx = bytes.Index(v, []byte("sip:")); idx > -1 {
+			out.UriType = v[idx : idx+3]
+			v = v[idx+4:]
+		} else if idx = bytes.Index(v, []byte("sips:")); idx > -1 {
+			out.UriType = v[idx : idx+4]
+			v = v[idx+5:]
+		} else {
+			return errors.New("unsupport URI-Schema found")
+		}
 
+		// Next find if userinfo is present denoted by @ (reserved charactor)
+		if idx = bytes.IndexByte(v, byte('@')); idx > -1 {
+			out.User = v[:idx]
+			v = v[idx+1:]
+		}
+		
+		// Trim of the password from the user section
+		if idx = bytes.IndexByte(out.User, byte(':')); idx > -1 {
+			out.User = out.User[:idx]
+		}
+		
+		// Apply fix for a non complient ua
+		if idx = bytes.IndexByte(out.User, byte(';')); idx > -1 {
+			out.Params = append(out.Params, out.User[idx+1:])
+			out.User = out.User[:idx]
+		}
+		
+		// In the non encapsulated the query form is possible
+		if idx = bytes.LastIndexByte(v, byte('?')); idx > -1 {
 			// parse header parameters
 			parseSipToHeaderParams(v[idx:], out)
 			v = v[:idx]
-
 			// Extract the URL parameters
+			// only available if the query form is used
 			for {
 				if idx = bytes.LastIndexByte(v, byte(';')); idx == -1 {
 					break
@@ -99,41 +168,16 @@ func parseSipTo(v []byte, out *sipTo) error {
 				v = v[:idx]
 			}
 		}
-	}
-
-	// Next we'll find that method SIP(S)
-	// Whilse the protocol allows the use 352 URI schema (we are only supporting sip)
-	// https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml
-	if idx = bytes.Index(v, []byte("sip:")); idx > -1 {
-		if idx > 0 {
-			out.Name = v[:idx]
+		
+		// remote any port
+		if idx = bytes.IndexByte(v, byte(':')); idx > -1 {
+			out.Port = v[idx+1:]
+			v = v[:idx]
 		}
-		out.UriType = v[idx : idx+3]
-		v = v[idx+4:]
-	} else if idx = bytes.Index(v, []byte("sips:")); idx > -1 {
-		if idx > 0 {
-			out.Name = v[:idx]
-		}
-		out.UriType = v[idx : idx+4]
-		v = v[idx+5:]
-	} else {
-		return errors.New("unsupport URI-Schema found")
+		
+		// all that is left is the host
+		out.Host = v
 	}
-
-	// Next find if userinfo is present denoted by @ (reserved charactor)
-	if idx = bytes.IndexByte(v, byte('@')); idx > -1 {
-		out.User = v[:idx]
-		v = v[idx+1:]
-	}
-
-	// remote any port
-	if idx = bytes.IndexByte(v, byte(':')); idx > -1 {
-		out.Port = v[idx+1:]
-		v = v[:idx]
-	}
-
-	// all that is left is the host
-	out.Host = v
 
 	return nil
 }
