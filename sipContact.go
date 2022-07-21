@@ -154,18 +154,18 @@ func parseSipContact(v []byte, out *sipContact) error {
 			out.User = v[:idx]
 			v = v[idx+1:]
 		}
-		
+
 		// Trim of the password from the user section
 		if idx = bytes.IndexByte(out.User, byte(':')); idx > -1 {
 			out.User = out.User[:idx]
 		}
-		
+
 		// Apply fix for a non complient ua
 		if idx = bytes.IndexByte(out.User, byte(';')); idx > -1 {
 			//out.Params = append(out.Params, out.User[idx+1:])
 			out.User = out.User[:idx]
 		}
-		
+
 		// In the non encapsulated the query form is possible
 		if idx = bytes.LastIndexByte(v, byte('?')); idx > -1 {
 			// parse header parameters
@@ -187,15 +187,15 @@ func parseSipContact(v []byte, out *sipContact) error {
 				v = v[:idx]
 			}
 		}
-		
+
 		// remote any port
 		if idx = bytes.IndexByte(v, byte(':')); idx > -1 {
 			out.Port = v[idx+1:]
 			v = v[:idx]
 		}
-		
+
 		// all that is left is the host
-		out.Host = v			
+		out.Host = v
 	}
 
 	return nil
@@ -228,8 +228,9 @@ func parseSipContactHeaderParams(v []byte, out *sipContact) {
 
 		if string(v[idx:idx+9]) == ";expires=" {
 			out.Expires = v[idx+9:]
-			v = v[:idx]
-			continue
 		}
+
+		v = v[:idx]
+		continue
 	}
 }
