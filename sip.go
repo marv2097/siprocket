@@ -82,20 +82,27 @@ func Parse(v []byte) (output SipMsg) {
 					via_idx++
 				case lhdr == "i" || lhdr == "call-id":
 					output.CallId.Value = lval
+					output.CallId.Src = lval
 				case lhdr == "c" || lhdr == "content-type":
 					output.ContType.Value = lval
+					output.ContType.Src = lval
 				case lhdr == "content-length":
 					output.ContLen.Value = lval
+					output.ContLen.Src = lval
 				case lhdr == "user-agent":
 					output.Ua.Value = lval
+					output.Ua.Src = lval
 				case lhdr == "expires":
 					output.Exp.Value = lval
+					output.Exp.Src = lval
 				case lhdr == "max-forwards":
 					output.MaxFwd.Value = lval
+					output.MaxFwd.Src = lval
 				case lhdr == "cseq":
 					parseSipCseq(lval, &output.Cseq)
 				case lhdr == "x-gamma-public-ip":
 					output.XGammaIP.Value = lval
+					output.XGammaIP.Src = lval
 				} // End of Switch
 			}
 			if spos == 1 && stype == '=' {

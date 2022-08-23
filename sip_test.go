@@ -109,8 +109,8 @@ func Test_sipParse_Nonsense(t *testing.T) {
 	out = Parse([]byte(msg))
 	eq := reflect.DeepEqual(out, exp)
 	if !eq {
-		exp, _ := json.MarshalIndent(exp,"","  ")
-		out, _ := json.MarshalIndent(out,"","  ")
+		exp, _ := json.MarshalIndent(exp, "", "  ")
+		out, _ := json.MarshalIndent(out, "", "  ")
 		t.Errorf("\n%s \n %s", exp, out)
 	}
 }
@@ -257,8 +257,8 @@ a=rtpmap:9 G722/8000`
 	out = Parse([]byte(msg))
 	eq := reflect.DeepEqual(out, exp)
 	if !eq {
-		exp, _ := json.MarshalIndent(exp,"","  ")
-		out, _ := json.MarshalIndent(out,"","  ")
+		exp, _ := json.MarshalIndent(exp, "", "  ")
+		out, _ := json.MarshalIndent(out, "", "  ")
 		t.Errorf("\n%s \n %s", exp, out)
 	}
 }
@@ -440,24 +440,29 @@ a=ptime:20`
 	out = Parse([]byte(msg))
 	eq := reflect.DeepEqual(out, exp)
 	if !eq {
-		exp, _ := json.MarshalIndent(exp,"","  ")
-		out, _ := json.MarshalIndent(out,"","  ")
+		exp, _ := json.MarshalIndent(exp, "", "  ")
+		out, _ := json.MarshalIndent(out, "", "  ")
 		t.Errorf("\n%s \n %s", exp, out)
 	}
 }
-
 
 func Test_sipParse_GenericTest(t *testing.T) {
 
 	var out, exp SipMsg
 
-	msg := `ACK sip:8660000101304799968;phone-context=+44@10.120.38.17:5060;user=phone SIP/2.0
+	msg := `INVITE sip:8660000101304799968;phone-context=+44@10.120.38.17:5060;user=phone SIP/2.0
 	Via: SIP/2.0/UDP 10.123.128.137:5060;branch=z9hG4bK-60c7c042-3-803569663
+	To: <sip:8660000101304799968;phone-context=+44@10.120.38.17;user=phone>
 	From: <sip:+441304380808@10.123.128.137;user=phone>;tag=14906060
-	To: <sip:8660000101304799968;phone-context=+44@10.120.38.17;user=phone>;tag=8283ea38d07f11f12efbdd1c86ed7531-18e7
 	Call-ID: 1623703618-524272678@3
-	CSeq: 1 ACK
+	CSeq: 1 INVITE
 	Max-Forwards: 70
+	Contact: <sip:+441304380808;tgrp=PST_IB2_B2BUA_04_01;trunk-context=hex-mgc-01.gamma.uktel.org.uk@10.123.128.137:5060;user=phone>
+	Expires: 330
+	Allow: INVITE, ACK, BYE, CANCEL, INFO, PRACK, REFER, SUBSCRIBE, NOTIFY, UPDATE
+	Accept: application/sdp
+	P-Asserted-Identity: <sip:+441304380808@10.123.128.137;user=phone>
+	Content-Length: 0
 	`
 	exp = SipMsg{
 		Req: sipReq{
@@ -556,8 +561,136 @@ func Test_sipParse_GenericTest(t *testing.T) {
 	out = Parse([]byte(msg))
 	eq := reflect.DeepEqual(out, exp)
 	if !eq {
-		exp, _ := json.MarshalIndent(exp,"","  ")
-		out, _ := json.MarshalIndent(out,"","  ")
+		exp, _ := json.MarshalIndent(exp, "", "  ")
+		out, _ := json.MarshalIndent(out, "", "  ")
+		t.Errorf("\n%s \n %s", exp, out)
+	}
+}
+
+func Test_sipParse_302Test(t *testing.T) {
+
+	var out, exp SipMsg
+
+	msg := `SIP/2.0 302 Moved temporarily
+	Via:SIP/2.0/UDP 10.124.148.3;branch=z9hG4bKbbab.f2349cdf1b0788f23b2648c6829b675d.0
+	From:<sip:ali.winter_PC_01173747677@novatm.co.uk>;tag=atpbkpq86t
+	To:<sip:ali.winter_PC_01173747677@novatm.co.uk>;tag=990900480-1661244511483
+	Call-ID:rpuvgblrlonejfnjc7jcjh
+	CSeq:6 REGISTER
+	Contact:<sip:novatm.co.uk:5060;transport=udp;maddr=10.124.133.15>;q=0.5
+	Content-Length:0	
+	`
+	exp = SipMsg{
+		Req: sipReq{
+			Method:     []byte(nil),
+			UriType:    []byte(nil),
+			StatusCode: []byte("302"),
+			StatusDesc: []byte("Moved Temporarily"),
+			User:       []byte(nil),
+			Host:       []byte(nil),
+			Port:       []byte(nil),
+			UserType:   []byte(nil),
+			Src:        []byte("SIP/2.0 302 Moved temporarily"),
+		},
+		From: sipFrom{
+			UriType: []byte("sip"),
+			Name:    []byte(nil),
+			User:    []byte("ali.winter_PC_01173747677"),
+			Host:    []byte("novatm.co.uk"),
+			Port:    []byte(nil),
+			Params:  [][]byte(nil),
+			Tag:     []byte("atpbkpq86t"),
+			Src:     []byte("<sip:ali.winter_PC_01173747677@novatm.co.uk>;tag=atpbkpq86t"),
+		},
+		To: sipTo{
+			UriType: []byte("sip"),
+			Name:    []byte(nil),
+			User:    []byte("ali.winter_PC_01173747677"),
+			Host:    []byte("novatm.co.uk"),
+			Port:    []byte(nil),
+			Params:  [][]byte(nil),
+			Tag:     []byte("990900480-1661244511483"),
+			Src:     []byte("<sip:ali.winter_PC_01173747677@novatm.co.uk>;tag=990900480-1661244511483"),
+		},
+		Contact: sipContact{
+			UriType: []byte("sip"),
+			Name:    []byte(nil),
+			User:    []byte(nil),
+			Host:    []byte("novatm.co.uk"),
+			Port:    []byte("5060"),
+			Tran:    []byte(nil),
+			Qval:    []byte("0.5"),
+			Expires: []byte(nil),
+			Src:     []byte("<sip:novatm.co.uk:5060;transport=udp;maddr=10.124.133.15>;q=0.5"),
+		},
+		Via: []sipVia{
+			{
+				Trans:  "udp",
+				Host:   []byte("10.124.148.3"),
+				Port:   []byte(nil),
+				Branch: []byte("z9hG4bKbbab.f2349cdf1b0788f23b2648c6829b675d.0"),
+				Rport:  []byte(nil),
+				Maddr:  []byte(nil),
+				Ttl:    []byte(nil),
+				Rcvd:   []byte(nil),
+				Src:    []byte("SIP/2.0/UDP 10.124.148.3;branch=z9hG4bKbbab.f2349cdf1b0788f23b2648c6829b675d.0"),
+			},
+		},
+		Cseq: sipCseq{
+			Id:     []byte("6"),
+			Method: []byte("REGISTER"),
+			Src:    []byte("6 REGISTER"),
+		},
+		Ua: sipVal{
+			Value: []byte(nil),
+			Src:   []byte(nil),
+		},
+		Exp: sipVal{
+			Value: []byte(nil),
+			Src:   []byte(nil),
+		},
+		MaxFwd: sipVal{
+			Value: []byte(nil),
+			Src:   []byte(nil),
+		},
+		CallId: sipVal{
+			Value: []byte("rpuvgblrlonejfnjc7jcjh"),
+			Src:   []byte("rpuvgblrlonejfnjc7jcjh"),
+		},
+		ContType: sipVal{
+			Value: []byte(nil),
+			Src:   []byte(nil),
+		},
+		ContLen: sipVal{
+			Value: []byte("0"),
+			Src:   []byte("0"),
+		},
+		XGammaIP: sipVal{
+			Value: []byte(nil),
+			Src:   []byte(nil),
+		},
+
+		Sdp: SdpMsg{
+			MediaDesc: sdpMediaDesc{
+				MediaType: []byte(nil),
+				Port:      []byte(nil),
+				Proto:     []byte(nil),
+				Fmt:       []byte(nil),
+				Src:       []byte(nil),
+			},
+			Attrib: []sdpAttrib{},
+			ConnData: sdpConnData{
+				AddrType: []byte(nil),
+				ConnAddr: []byte(nil),
+				Src:      []byte(nil),
+			},
+		},
+	}
+	out = Parse([]byte(msg))
+	eq := reflect.DeepEqual(out, exp)
+	if !eq {
+		exp, _ := json.MarshalIndent(exp, "", "  ")
+		out, _ := json.MarshalIndent(out, "", "  ")
 		t.Errorf("\n%s \n %s", exp, out)
 	}
 }
@@ -615,5 +748,5 @@ func custConv(oldArr [][]byte) (newArr []string) {
 	for _, v := range oldArr {
 		newArr = append(newArr, string(v))
 	}
-	return 
+	return
 }

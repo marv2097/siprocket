@@ -11,6 +11,7 @@ SIP/2.0 200 OK
 import (
 	"bytes"
 	"errors"
+	"fmt"
 )
 
 type sipReq struct {
@@ -162,13 +163,13 @@ func parseSipReq(v []byte, out *sipReq) error {
 		if idx = bytes.IndexByte(out.User, byte(':')); idx > -1 {
 			out.User = out.User[:idx]
 		}
-	
+
 		// Apply fix for a non complient ua
 		if idx = bytes.IndexByte(out.User, byte(';')); idx > -1 {
 			//out.Params = append(out.Params, out.User[idx+1:])
 			out.User = out.User[:idx]
 		}
-	
+
 		// In the non encapsulated the query form is possible
 		if idx = bytes.LastIndexByte(v, byte('?')); idx > -1 {
 			// parse header parameters
@@ -196,7 +197,7 @@ func parseSipReq(v []byte, out *sipReq) error {
 			out.Port = v[idx+1:]
 			v = v[:idx]
 		}
-		
+
 		// all that is left is the host
 		out.Host = v
 	}
@@ -205,19 +206,28 @@ func parseSipReq(v []byte, out *sipReq) error {
 }
 
 func parseSipResp(v []byte, out *sipReq) error {
-	var idx int
-
-	// Get descriptions last bit
-	if idx = bytes.LastIndex(v, []byte(" ")); idx > -1 {
-		out.StatusDesc = v[idx+1:]
-		v = v[:idx]
-	}
+	var idx, idy int
 
 	// Get statuscode middle bit.
-	if idx = bytes.LastIndex(v, []byte(" ")); idx > -1 {
-		out.StatusCode = v[idx+1:]
-		v = v[:idx]
+	if idx = bytes.Index(v, []byte(" ")); idx == -1 {
+		return fmt.Errorf("unable to determin status code")
 	}
+	if len(v) < idx+1 {
+		return fmt.Errorf("unable to determin status code, too short")
+	}
+
+	// Get descriptions last bit
+	if idy = bytes.Index(v[idx+1:], []byte(" ")); idy == -1 {
+		return fmt.Errorf("unable to determin status description")
+	}
+
+	out.StatusCode = v[idx+1 : idx+1+idy]
+
+	if len(v) < idx+1+idy {
+		return fmt.Errorf("unable to determin status description, too short")
+	}
+
+	out.StatusDesc = v[idx+1+idy+1:]
 
 	return nil
 }
