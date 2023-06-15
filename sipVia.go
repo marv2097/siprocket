@@ -75,6 +75,16 @@ func parseSipVia(v []byte, out *sipVia) {
 						pos = pos + 4
 						continue
 					}
+					if getString(v, pos, pos+3) == "WSS" {
+						out.Trans = "wss"
+						pos = pos + 3
+						continue
+					}
+					if getString(v, pos, pos+2) == "WS" {
+						out.Trans = "ws"
+						pos = pos + 2
+						continue
+					}
 				}
 				// Look for a Branch identifier
 				if getString(v, pos, pos+7) == "branch=" {

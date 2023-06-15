@@ -22,6 +22,7 @@ type SipMsg struct {
 	CallId   sipVal
 	ContType sipVal
 	ContLen  sipVal
+	XGammaIP sipVal
 
 	Sdp SdpMsg
 }
@@ -47,6 +48,9 @@ func Parse(v []byte) (output SipMsg) {
 	output.Sdp.Attrib = make([]sdpAttrib, 0, 8)
 
 	lines := bytes.Split(v, []byte("\r\n"))
+	if len(lines) < 2 {
+		lines = bytes.Split(v, []byte("\n"))
+	}
 
 	for i, line := range lines {
 		//fmt.Println(i, string(line))
@@ -78,18 +82,27 @@ func Parse(v []byte) (output SipMsg) {
 					via_idx++
 				case lhdr == "i" || lhdr == "call-id":
 					output.CallId.Value = lval
+					output.CallId.Src = lval
 				case lhdr == "c" || lhdr == "content-type":
 					output.ContType.Value = lval
+					output.ContType.Src = lval
 				case lhdr == "content-length":
 					output.ContLen.Value = lval
+					output.ContLen.Src = lval
 				case lhdr == "user-agent":
 					output.Ua.Value = lval
+					output.Ua.Src = lval
 				case lhdr == "expires":
 					output.Exp.Value = lval
+					output.Exp.Src = lval
 				case lhdr == "max-forwards":
 					output.MaxFwd.Value = lval
+					output.MaxFwd.Src = lval
 				case lhdr == "cseq":
 					parseSipCseq(lval, &output.Cseq)
+				case lhdr == "x-gamma-public-ip":
+					output.XGammaIP.Value = lval
+					output.XGammaIP.Src = lval
 				} // End of Switch
 			}
 			if spos == 1 && stype == '=' {
@@ -137,10 +150,10 @@ func indexSep(s []byte) (int, byte) {
 func getString(sl []byte, from, to int) string {
 	// Remove negative values
 	if from < 0 {
-	    from = 0
+		from = 0
 	}
 	if to < 0 {
-	    to = 0
+		to = 0
 	}
 	// Limit if over len
 	if from > len(sl) || from > to {
@@ -157,10 +170,10 @@ func getString(sl []byte, from, to int) string {
 func getBytes(sl []byte, from, to int) []byte {
 	// Remove negative values
 	if from < 0 {
-	    from = 0
+		from = 0
 	}
 	if to < 0 {
-	    to = 0
+		to = 0
 	}
 	// Limit if over len
 	if from > len(sl) || from > to {
@@ -194,6 +207,9 @@ func PrintSipStruct(data *SipMsg) {
 	fmt.Println("    [Host] =>", string(data.From.Host))
 	fmt.Println("    [Port] =>", string(data.From.Port))
 	fmt.Println("    [Tag] =>", string(data.From.Tag))
+	for _, v := range data.From.Params {
+		fmt.Println("    [Params] =>", string(v))
+	}
 	fmt.Println("    [Src] =>", string(data.From.Src))
 	// TO
 	fmt.Println("  [TO]")
@@ -203,7 +219,9 @@ func PrintSipStruct(data *SipMsg) {
 	fmt.Println("    [Host] =>", string(data.To.Host))
 	fmt.Println("    [Port] =>", string(data.To.Port))
 	fmt.Println("    [Tag] =>", string(data.To.Tag))
-	fmt.Println("    [UserType] =>", string(data.To.UserType))
+	for _, v := range data.To.Params {
+		fmt.Println("    [Params] =>", string(v))
+	}
 	fmt.Println("    [Src] =>", string(data.To.Src))
 	// TO
 	fmt.Println("  [Contact]")
@@ -241,6 +259,10 @@ func PrintSipStruct(data *SipMsg) {
 	fmt.Println("  [Content-Type]")
 	fmt.Println("    [Value] =>", string(data.ContType.Value))
 	fmt.Println("    [Src] =>", string(data.ContType.Src))
+	// XGammaIP
+	fmt.Println("  [XGammaIP]")
+	fmt.Println("    [Value] =>", string(data.XGammaIP.Value))
+	fmt.Println("    [Src] =>", string(data.XGammaIP.Src))
 
 	// Via - Multiple
 	fmt.Println("  [Via]")
